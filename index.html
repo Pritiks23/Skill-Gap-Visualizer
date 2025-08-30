@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Skill Gap Visualizer</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #fff; color: #111; }
+  h1 { text-align: center; }
+  textarea { width: 100%; height: 120px; margin-bottom: 10px; padding: 10px; font-family: monospace; }
+  button { padding: 10px 20px; margin-bottom: 20px; cursor: pointer; }
+  .results { margin-top: 20px; }
+  .skill { display: inline-block; margin: 5px; padding: 5px 10px; border-radius: 5px; color: #fff; }
+  .matched { background: green; }
+  .missing { background: red; }
+  .progress-container { background: #eee; border-radius: 20px; overflow: hidden; margin-top: 10px; }
+  .progress-bar { height: 20px; background: green; width: 0%; text-align: center; color: #fff; line-height: 20px; }
+</style>
+</head>
+<body>
+<h1>Resume Skill Gap Visualizer</h1>
+
+<label>Paste Job Description:</label>
+<textarea id="jdInput" placeholder="Paste job description here..."></textarea>
+
+<label>Paste Resume:</label>
+<textarea id="resumeInput" placeholder="Paste your resume here..."></textarea>
+
+<button onclick="analyzeSkills()">Analyze Skills</button>
+
+<div class="results" id="results"></div>
+
+<script>
+// Helper to extract simple skill keywords (basic)
+function extractSkills(text) {
+    return Array.from(new Set(text.toLowerCase().match(/\b[a-zA-Z0-9#+.]+\b/g) || []));
+}
+
+function analyzeSkills() {
+    const jdText = document.getElementById('jdInput').value;
+    const resumeText = document.getElementById('resumeInput').value;
+    const jdSkills = extractSkills(jdText);
+    const resumeSkills = extractSkills(resumeText);
+
+    const matched = jdSkills.filter(skill => resumeSkills.includes(skill));
+    const missing = jdSkills.filter(skill => !resumeSkills.includes(skill));
+    const score = Math.round((matched.length / jdSkills.length) * 100);
+
+    // Display results
+    let html = `<h2>Matching Score: ${score}%</h2>`;
+    html += `<div class="progress-container"><div class="progress-bar" style="width:${score}%">${score}%</div></div>`;
+
+    html += `<h3>Matched Skills:</h3>`;
+    if (matched.length) {
+        html += matched.map(s => `<span class="skill matched">${s}</span>`).join('');
+    } else {
+        html += `<p>None</p>`;
+    }
+
+    html += `<h3>Missing Skills:</h3>`;
+    if (missing.length) {
+        html += missing.map(s => `<span class="skill missing">${s}</span>`).join('');
+    } else {
+        html += `<p>None</p>`;
+    }
+
+    document.getElementById('results').innerHTML = html;
+}
+</script>
+</body>
+</html>
