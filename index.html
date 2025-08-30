@@ -3,48 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resume Skill Gap Visualizer</title>
+<title>Dynamic Resume Skill Gap Visualizer</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; background: #fff; color: #111; }
-  h1 { text-align: center; }
-  textarea { width: 100%; height: 120px; margin-bottom: 10px; padding: 10px; font-family: monospace; }
-  button { padding: 10px 20px; margin-bottom: 20px; cursor: pointer; }
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1470&q=80') no-repeat center center fixed;
+    background-size: cover;
+    color: #111;
+  }
+  nav {
+    background: rgba(0,0,0,0.7);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  nav a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px 12px;
+    border: 1px solid #fff;
+    border-radius: 5px;
+    transition: 0.3s;
+  }
+  nav a:hover { background: #fff; color: #000; }
+  header { text-align: center; margin-top: 40px; color: #fff; text-shadow: 1px 1px 2px #000; }
+  .container { max-width: 900px; margin: auto; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 10px; margin-top: 20px; }
+  textarea { width: 100%; height: 120px; margin-bottom: 10px; padding: 10px; font-family: monospace; border-radius: 5px; border: 1px solid #ccc; }
+  button { padding: 10px 20px; margin-bottom: 20px; cursor: pointer; border-radius: 5px; border: none; background: #007bff; color: #fff; font-weight: bold; transition: 0.3s; }
+  button:hover { background: #0056b3; }
   .results { margin-top: 20px; }
-  .skill { display: inline-block; margin: 5px; padding: 5px 10px; border-radius: 5px; color: #fff; }
-  .matched { background: green; }
-  .missing { background: red; }
+  .skill { display: inline-block; margin: 5px; padding: 5px 12px; border-radius: 5px; color: #fff; font-weight: bold; }
+  .matched { background: #28a745; }
+  .missing { background: #dc3545; }
   .progress-container { background: #eee; border-radius: 20px; overflow: hidden; margin-top: 10px; }
-  .progress-bar { height: 20px; background: green; width: 0%; text-align: center; color: #fff; line-height: 20px; }
+  .progress-bar { height: 25px; background: #28a745; width: 0%; text-align: center; color: #fff; line-height: 25px; font-weight: bold; }
 </style>
 </head>
 <body>
-<h1>Resume Skill Gap Visualizer</h1>
 
-<label>Paste Job Description:</label>
-<textarea id="jdInput" placeholder="Paste job description here..."></textarea>
+<nav>
+  <div>Dynamic Skill Gap Visualizer</div>
+  <a href="https://www.themuse.com/advice/how-to-tailor-your-resume" target="_blank">Resume Resources</a>
+</nav>
 
-<label>Paste Resume:</label>
-<textarea id="resumeInput" placeholder="Paste your resume here..."></textarea>
+<header>
+  <h1>Dynamic Resume Skill Gap Visualizer</h1>
+  <p>Compare your resume to a job description and see where you shine — and where you need improvement.</p>
+</header>
 
-<button onclick="analyzeSkills()">Analyze Skills</button>
+<div class="container">
+  <label>Paste Job Description:</label>
+  <textarea id="jdInput" placeholder="Paste job description here..."></textarea>
 
-<div class="results" id="results"></div>
+  <label>Paste Resume:</label>
+  <textarea id="resumeInput" placeholder="Paste your resume here..."></textarea>
+
+  <button onclick="analyzeSkills()">Analyze Skills</button>
+
+  <div class="results" id="results"></div>
+</div>
 
 <script>
-// Helper to extract simple skill keywords (basic)
-function extractSkills(text) {
-    return Array.from(new Set(text.toLowerCase().match(/\b[a-zA-Z0-9#+.]+\b/g) || []));
+// Stopwords to ignore in analysis
+const stopwords = ["and","or","the","in","of","for","with","a","an","to","as","by","on","at","is","are","from","your","you","this","that","will","be"];
+
+// Extract key phrases/skills heuristically
+function extractKeyPhrases(text) {
+    text = text.toLowerCase().replace(/[\d.,\/#!$%\^&\*;:{}=\-_`~()]/g," ");
+    const words = text.split(/\s+/).filter(w => w.length > 1 && !stopwords.includes(w));
+    const freq = {};
+    words.forEach(w => { freq[w] = (freq[w] || 0) + 1; });
+    // Sort by frequency
+    const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+    // Return top ~50 phrases for JD, top ~30 for resume
+    return sorted.slice(0,50);
 }
 
 function analyzeSkills() {
     const jdText = document.getElementById('jdInput').value;
     const resumeText = document.getElementById('resumeInput').value;
-    const jdSkills = extractSkills(jdText);
-    const resumeSkills = extractSkills(resumeText);
+    if(!jdText || !resumeText) {
+        alert("Please paste both job description and resume.");
+        return;
+    }
+
+    const jdSkills = extractKeyPhrases(jdText);
+    const resumeSkills = extractKeyPhrases(resumeText);
 
     const matched = jdSkills.filter(skill => resumeSkills.includes(skill));
     const missing = jdSkills.filter(skill => !resumeSkills.includes(skill));
-    const score = Math.round((matched.length / jdSkills.length) * 100);
+    const score = jdSkills.length ? Math.round((matched.length / jdSkills.length) * 100) : 0;
 
     // Display results
     let html = `<h2>Matching Score: ${score}%</h2>`;
@@ -67,5 +118,6 @@ function analyzeSkills() {
     document.getElementById('results').innerHTML = html;
 }
 </script>
+
 </body>
 </html>
